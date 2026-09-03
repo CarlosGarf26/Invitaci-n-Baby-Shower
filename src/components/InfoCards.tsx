@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { Ticket, Gift, UtensilsCrossed, AlertTriangle, ChevronDown, Copy, Check } from 'lucide-react';
 
 export function InfoCards() {
@@ -9,7 +9,7 @@ export function InfoCards() {
     setExpandedId(prev => (prev === id ? null : id));
   };
 
-  const handleCopyAccount = (e: React.MouseEvent) => {
+  const handleCopyAccount = (e: MouseEvent) => {
     e.stopPropagation();
     navigator.clipboard.writeText('722969010522604555');
     setCopiedAccount(true);
@@ -50,7 +50,7 @@ export function InfoCards() {
                   ¡Muy Importante!
                 </span>
                 <h3 className="text-sm font-bold font-comfortaa text-[#573919]">
-                  Confirmar antes del 18 de Septiembre
+                  Confirmar antes del 16 de Octubre
                 </h3>
               </div>
             </div>
@@ -65,7 +65,7 @@ export function InfoCards() {
             <div className="px-4 pb-4 pt-1 text-xs text-[#6C5338] space-y-2 border-t border-[#F1E0CA]">
               <p>
                 Por favor, confírmanos tu asistencia a más tardar el{' '}
-                <strong className="text-[#884D19]">18 de septiembre</strong>, indicando el número total
+                <strong className="text-[#884D19]">16 de octubre</strong>, indicando el número total
                 de personas que te acompañarán (adultos y niños).
               </p>
               <div className="p-2.5 rounded-xl bg-[#FCEFDC] border border-[#F3DFC1] text-[11px] leading-relaxed">

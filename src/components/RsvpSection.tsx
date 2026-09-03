@@ -86,7 +86,7 @@ ${data.notes.trim() ? `💬 Nota: ${data.notes.trim()}` : ''}
             ¿Nos acompañas?
           </h2>
           <div className="inline-block px-3 py-1 bg-[#F5EAD9] rounded-full text-xs text-[#825A2A] font-semibold mt-2 border border-[#E8D6BD]">
-            ⏰ Fecha límite: 18 de Septiembre
+            ⏰ Fecha límite: 16 de Octubre
           </div>
         </div>
 
