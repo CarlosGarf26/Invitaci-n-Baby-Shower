@@ -1,10 +1,10 @@
 /**
- * Dragon Ball Z Instrumental Audio Player
- * Plays "Cha-La Head-Cha-La" (HQ Instrumental, Sin coros)
+ * Dragon Ball GT Audio Player
+ * Plays "Mi Corazón Encantado" (Piano Cover Instrumental)
  */
 
 const AUDIO_SRC =
-  'https://raw.githubusercontent.com/CarlosGarf26/Invitaci-n-Baby-Shower/982dfafa44262685c356050f9354f8da75edab5f/Dragon%20Ball%20Z%20-%20IntroOpening%20Cha%20La%20Head%20Cha%20La%20(Instrumental)%20%5BSin%20coros%20%20No%20chorus%5D%20%20HQ.mp3';
+  'https://raw.githubusercontent.com/CarlosGarf26/Invitaci-n-Baby-Shower/a125865a68c89f3ecfb8560f594eab468e5408e5/MI%20CORAZ%C3%93N%20ENCANTADO%20-%20Dragon%20ball%20GT%20piano%20%20Fernanfloo.mp3';
 
 class DragonBallAudioPlayer {
   private audio: HTMLAudioElement | null = null;
