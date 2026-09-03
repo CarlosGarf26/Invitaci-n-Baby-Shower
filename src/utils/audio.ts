@@ -1,13 +1,14 @@
 /**
  * Dragon Ball GT Audio Player
  * Plays "Mi Corazón Encantado" (Piano Cover Instrumental)
- * Starts from second 40 (chorus / main melody)
+ * Loop range: From second 45 (0:45) to 3 minutes 2 seconds (3:02 / 182s)
  */
 
 const AUDIO_SRC =
   'https://raw.githubusercontent.com/CarlosGarf26/Invitaci-n-Baby-Shower/a125865a68c89f3ecfb8560f594eab468e5408e5/MI%20CORAZ%C3%93N%20ENCANTADO%20-%20Dragon%20ball%20GT%20piano%20%20Fernanfloo.mp3';
 
-const START_OFFSET_SECONDS = 40;
+const START_OFFSET_SECONDS = 45; // 0:45
+const END_OFFSET_SECONDS = 182;   // 3:02 (3 * 60 + 2)
 
 class DragonBallAudioPlayer {
   private audio: HTMLAudioElement | null = null;
@@ -33,6 +34,17 @@ class DragonBallAudioPlayer {
       this.audio.addEventListener('loadedmetadata', applyStartTime);
       this.audio.addEventListener('canplay', applyStartTime);
 
+      // Loop precisely when reaching 3:02 (182s), cutting before ending voices
+      this.audio.addEventListener('timeupdate', () => {
+        if (this.audio && this.audio.currentTime >= END_OFFSET_SECONDS) {
+          try {
+            this.audio.currentTime = START_OFFSET_SECONDS;
+          } catch {
+            // ignore
+          }
+        }
+      });
+
       this.audio.addEventListener('play', () => {
         this.isPlaying = true;
       });
@@ -41,7 +53,7 @@ class DragonBallAudioPlayer {
         this.isPlaying = false;
       });
 
-      // Loop back to second 40 when track finishes
+      // Loop back to second 45 if track reaches the end unexpectedly
       this.audio.addEventListener('ended', () => {
         if (this.audio) {
           try {
@@ -69,7 +81,11 @@ class DragonBallAudioPlayer {
     this.initAudio();
     if (!this.audio) return;
 
-    if (!this.hasInitializedStartTime || this.audio.currentTime < START_OFFSET_SECONDS) {
+    if (
+      !this.hasInitializedStartTime ||
+      this.audio.currentTime < START_OFFSET_SECONDS ||
+      this.audio.currentTime >= END_OFFSET_SECONDS
+    ) {
       try {
         this.audio.currentTime = START_OFFSET_SECONDS;
         this.hasInitializedStartTime = true;
