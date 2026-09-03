@@ -68,14 +68,14 @@ export default function App() {
 
         {/* Hero Card */}
         <header className="bg-[#FAF6F0] rounded-3xl p-6 sm:p-8 border border-[#E8DEC9] shadow-xs text-center relative overflow-hidden">
-          {/* Custom background image container (Vegeta/Bulma watermark) */}
+          {/* Custom background image container (watermark) */}
           <div 
             className="absolute inset-0 z-0 pointer-events-none mix-blend-multiply"
             style={{
-              backgroundImage: 'url("https://raw.githubusercontent.com/CarlosGarf26/bot-telegram-assets/0cfc8308b837ce2a2f02c2abc7f6a327aa65534e/image.png")',
+              backgroundImage: 'url("https://raw.githubusercontent.com/CarlosGarf26/bot-telegram-assets/f3a34a65b141a01bb674f440d342afc23bfe5a31/Code_Generated_Image.png")',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: 0.20,
+              opacity: 0.35,
             }}
           />
           {/* Subtle top pastel aura overlay */}
