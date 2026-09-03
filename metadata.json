@@ -1,0 +1,6 @@
+{
+  "name": "Invitación Baby Shower",
+  "description": "Invitación interactiva y tierna en tonos pastel para Baby Shower con fin de semana en cabañas de Tequesquitengo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
