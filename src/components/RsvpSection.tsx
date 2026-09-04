@@ -11,7 +11,7 @@ export function RsvpSection() {
     adults: 2,
     children: 0,
     arrivalDay: 'sabado',
-    phoneHost: '527771234567', // Default editable host phone
+    phoneHost: '525573652247', // Predeterminado: 525573652247
     notes: '',
   });
 
