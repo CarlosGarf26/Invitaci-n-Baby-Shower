@@ -5,6 +5,13 @@ export interface RsvpData {
   arrivalDay: 'viernes' | 'sabado';
   phoneHost: string;
   notes: string;
+  status?: 'confirmed' | 'declined';
+}
+
+export interface RsvpRecord extends RsvpData {
+  id: string;
+  status: 'confirmed' | 'declined';
+  createdAt: string;
 }
 
 export interface PollState {
@@ -13,3 +20,4 @@ export interface PollState {
   localBoyVotes: number;
   localGirlVotes: number;
 }
+

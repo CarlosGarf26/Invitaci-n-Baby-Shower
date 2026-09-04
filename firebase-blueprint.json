@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "rsvp": {
+      "title": "RSVP",
+      "description": "Confirmación de asistencia al Baby Shower",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Nombre de la familia o invitado",
+          "maxLength": 100
+        },
+        "adults": {
+          "type": "number",
+          "description": "Número de adultos"
+        },
+        "children": {
+          "type": "number",
+          "description": "Número de niños"
+        },
+        "arrivalDay": {
+          "type": "string",
+          "description": "Día estimado de llegada",
+          "enum": ["viernes", "sabado"]
+        },
+        "notes": {
+          "type": "string",
+          "description": "Mensaje o nota opcional",
+          "maxLength": 500
+        },
+        "status": {
+          "type": "string",
+          "description": "Estado de confirmación",
+          "enum": ["confirmed", "declined"]
+        },
+        "phoneHost": {
+          "type": "string",
+          "description": "Teléfono de WhatsApp anfitrión",
+          "maxLength": 30
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Fecha de registro ISO"
+        }
+      },
+      "required": ["name", "adults", "children", "arrivalDay", "status"]
+    }
+  },
+  "firestore": {
+    "/rsvps/{rsvpId}": {
+      "schema": "rsvp",
+      "description": "Colección de confirmaciones de asistencia de los invitados"
+    }
+  }
+}

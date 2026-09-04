@@ -1,0 +1,55 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Health check / connection test document
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // Check if user is an authorized admin
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == "garfias.jc.260694@gmail.com" ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Validate RSVP payload
+    function isValidRsvp(data) {
+      return data.name is string &&
+             data.name.size() > 0 &&
+             data.name.size() <= 100 &&
+             data.adults is number &&
+             data.adults >= 0 &&
+             data.adults <= 50 &&
+             data.children is number &&
+             data.children >= 0 &&
+             data.children <= 50 &&
+             data.arrivalDay in ['viernes', 'sabado'] &&
+             data.status in ['confirmed', 'declined'] &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+             (!('phoneHost' in data) || (data.phoneHost is string && data.phoneHost.size() <= 30)) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60));
+    }
+
+    // RSVPs collection
+    match /rsvps/{rsvpId} {
+      // Guests can create their confirmation
+      allow create: if isValidRsvp(request.resource.data);
+
+      // Only authenticated admin can view, list, modify or delete registrations
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

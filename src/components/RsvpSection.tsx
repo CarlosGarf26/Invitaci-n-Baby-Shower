@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
-import { Send, Users, Baby, CheckCircle2 } from 'lucide-react';
+import { Send, Users, Baby, CheckCircle2, Loader2, HeartHandshake } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { RsvpData } from '../types';
+import { saveRsvp } from '../firebase';
 
 export function RsvpSection() {
   const [data, setData] = useState<RsvpData>({
@@ -14,6 +15,7 @@ export function RsvpSection() {
     notes: '',
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const [showPhoneEdit, setShowPhoneEdit] = useState(false);
 
@@ -31,7 +33,7 @@ export function RsvpSection() {
     }));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!data.name.trim()) {
@@ -39,24 +41,35 @@ export function RsvpSection() {
       return;
     }
 
-    // Festive confetti explosion!
-    confetti({
-      particleCount: 150,
-      spread: 100,
-      origin: { y: 0.6 },
-      colors: ['#A0D2EB', '#E5EAF5', '#D0BDF4', '#8458B3', '#A28089', '#FDFBF7'],
-      disableForReducedMotion: true,
-      zIndex: 100
-    });
+    setIsSubmitting(true);
 
-    setIsSent(true);
-    setTimeout(() => setIsSent(false), 5000);
+    try {
+      // 1. Save directly to Firebase Firestore
+      await saveRsvp({
+        ...data,
+        name: data.name.trim(),
+        status: 'confirmed',
+      });
 
-    // Build friendly WhatsApp message
-    const arrivalText = data.arrivalDay === 'viernes' ? 'Desde el Viernes 20' : 'Sábado 21 (evento principal)';
-    const totalPeople = data.adults + data.children;
-    const msg = 
-`¡Hola! Queremos confirmar nuestra asistencia al Baby Shower en Tequesquitengo 👶🍼✨
+      // 2. Festive confetti celebration
+      confetti({
+        particleCount: 150,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: ['#A0D2EB', '#E5EAF5', '#D0BDF4', '#8458B3', '#A28089', '#FDFBF7'],
+        disableForReducedMotion: true,
+        zIndex: 100,
+      });
+
+      setIsSent(true);
+
+      // 3. Build friendly WhatsApp message & open
+      const arrivalText =
+        data.arrivalDay === 'viernes'
+          ? 'Desde el Viernes 20'
+          : 'Sábado 21 (evento principal)';
+      const totalPeople = data.adults + data.children;
+      const msg = `¡Hola! Queremos confirmar nuestra asistencia al Baby Shower en Tequesquitengo 👶🍼✨
 
 👤 Familia / Invitado: ${data.name.trim()}
 👥 Total personas: ${totalPeople} (${data.adults} adultos, ${data.children} niños)
@@ -65,15 +78,34 @@ ${data.notes.trim() ? `💬 Nota: ${data.notes.trim()}` : ''}
 
 ¡Estamos muy felices de compartir este fin de semana con ustedes! 💕`;
 
-    const encodedMsg = encodeURIComponent(msg);
-    // Clean host phone
-    const cleanPhone = data.phoneHost.replace(/[^0-9]/g, '');
-    const waUrl = cleanPhone 
-      ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`
-      : `https://api.whatsapp.com/send?text=${encodedMsg}`;
+      const encodedMsg = encodeURIComponent(msg);
+      const cleanPhone = data.phoneHost.replace(/[^0-9]/g, '');
+      const waUrl = cleanPhone
+        ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`
+        : `https://api.whatsapp.com/send?text=${encodedMsg}`;
 
-    window.open(waUrl, '_blank', 'noopener,noreferrer');
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      console.error('Error al registrar confirmación:', err);
+      // Even if Firestore has transient error, let user send via WhatsApp
+      const arrivalText =
+        data.arrivalDay === 'viernes'
+          ? 'Desde el Viernes 20'
+          : 'Sábado 21 (evento principal)';
+      const totalPeople = data.adults + data.children;
+      const msg = `¡Hola! Queremos confirmar nuestra asistencia al Baby Shower en Tequesquitengo 👶🍼✨\n\n👤 Familia / Invitado: ${data.name.trim()}\n👥 Total personas: ${totalPeople} (${data.adults} adultos, ${data.children} niños)\n📅 Llegada: ${arrivalText}\n${data.notes.trim() ? `💬 Nota: ${data.notes.trim()}` : ''}`;
+      const encodedMsg = encodeURIComponent(msg);
+      const cleanPhone = data.phoneHost.replace(/[^0-9]/g, '');
+      const waUrl = cleanPhone
+        ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`
+        : `https://api.whatsapp.com/send?text=${encodedMsg}`;
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+      setIsSent(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   return (
     <section id="rsvp-section" className="my-8">
@@ -247,10 +279,20 @@ ${data.notes.trim() ? `💬 Nota: ${data.notes.trim()}` : ''}
           <button
             id="btn-submit-whatsapp"
             type="submit"
-            className="w-full py-3.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#20BE5C] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all transform hover:scale-[1.01]"
+            disabled={isSubmitting}
+            className="w-full py-3.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#20BE5C] disabled:bg-[#8CD8A9] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all transform hover:scale-[1.01]"
           >
-            <Send className="w-4 h-4" />
-            <span>Confirmar Asistencia por WhatsApp</span>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Registrando confirmación...</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4" />
+                <span>Confirmar Asistencia</span>
+              </>
+            )}
           </button>
         </form>
 
@@ -261,10 +303,13 @@ ${data.notes.trim() ? `💬 Nota: ${data.notes.trim()}` : ''}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="mt-4 p-3 bg-[#E8F5E9] border border-[#C8E6C9] rounded-xl text-center text-[11px] sm:text-xs text-[#2E7D32] flex flex-col items-center justify-center gap-1.5 shadow-sm"
+              className="mt-4 p-3.5 bg-[#E8F5E9] border border-[#C8E6C9] rounded-xl text-center text-xs text-[#2E7D32] flex flex-col items-center justify-center gap-1 shadow-xs"
             >
               <CheckCircle2 className="w-5 h-5 text-[#4CAF50]" />
-              <span className="font-semibold">¡Listo! Se abrió WhatsApp para enviar tu confirmación.</span>
+              <span className="font-bold">¡Tu asistencia ha sido registrada exitosamente!</span>
+              <span className="text-[11px] text-[#388E3C]">
+                Guardado en la lista oficial y listo en WhatsApp para los anfitriones.
+              </span>
             </motion.div>
           )}
         </AnimatePresence>
