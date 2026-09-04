@@ -17,9 +17,10 @@ import {
   Eye,
   EyeOff,
   KeyRound,
+  RotateCcw,
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { subscribeToRsvps, deleteRsvp } from '../firebase';
+import { subscribeToRsvps, deleteRsvp, subscribeToGenderPoll, resetGenderPoll } from '../firebase';
 import { RsvpRecord } from '../types';
 
 interface AdminModalProps {
@@ -50,8 +51,10 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDay, setFilterDay] = useState<'all' | 'viernes' | 'sabado'>('all');
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [pollStats, setPollStats] = useState<{ boyVotes: number; girlVotes: number }>({ boyVotes: 0, girlVotes: 0 });
+  const [isResettingPoll, setIsResettingPoll] = useState(false);
 
-  // Subscribe to live RSVPs when authorized
+  // Subscribe to live RSVPs and Poll when authorized
   useEffect(() => {
     if (!isOpen || !isAuthorized) {
       if (!isAuthorized) {
@@ -62,7 +65,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
 
     setIsLoading(true);
     setDataError(null);
-    const unsubscribe = subscribeToRsvps(
+    const unsubscribeRsvps = subscribeToRsvps(
       records => {
         setRsvps(records);
         setIsLoading(false);
@@ -76,7 +79,14 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
       }
     );
 
-    return () => unsubscribe();
+    const unsubscribePoll = subscribeToGenderPoll(data => {
+      setPollStats({ boyVotes: data.boyVotes, girlVotes: data.girlVotes });
+    });
+
+    return () => {
+      unsubscribeRsvps();
+      unsubscribePoll();
+    };
   }, [isOpen, isAuthorized]);
 
   // Handle Credentials Submit
@@ -127,6 +137,24 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
       alert('Hubo un error al eliminar el registro.');
     } finally {
       setIsDeletingId(null);
+    }
+  };
+
+  // Reset gender poll count
+  const handleResetPoll = async () => {
+    if (!window.confirm('¿Deseas reiniciar a cero (0 - 0) el conteo de votos de niño y niña?')) return;
+    try {
+      setIsResettingPoll(true);
+      await resetGenderPoll();
+      // Also clear local counts stored for the admin device
+      localStorage.removeItem('baby_shower_poll_device_v2');
+      localStorage.removeItem('baby_shower_poll_v1');
+      alert('¡Conteo de votos reiniciado a 0 exitosamente!');
+    } catch (err) {
+      console.error('Error resetting poll:', err);
+      alert('Hubo un problema al reiniciar el conteo.');
+    } finally {
+      setIsResettingPoll(false);
     }
   };
 
@@ -408,6 +436,33 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                     <div>☀️ Sábado 21: <span className="text-[#967C56]">{stats.saturdayCount}</span></div>
                   </div>
                 </div>
+              </div>
+
+              {/* Gender Poll Status & Reset Card */}
+              <div className="p-3.5 bg-[#FAF3EA] rounded-2xl border border-[#E8DCCB] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-lg border border-[#E5DAC8] shrink-0">
+                    👶
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-[#554636]">
+                      Votación de Género en vivo
+                    </h4>
+                    <p className="text-[11px] text-[#7A6A57]">
+                      🍼 Team Niño: <span className="font-bold text-[#3B6998]">{pollStats.boyVotes}</span> &nbsp;|&nbsp; 🎀 Team Niña: <span className="font-bold text-[#A84B68]">{pollStats.girlVotes}</span> &nbsp;(Total: {pollStats.boyVotes + pollStats.girlVotes})
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={isResettingPoll}
+                  onClick={handleResetPoll}
+                  className="px-3 py-1.5 rounded-xl bg-white border border-[#D5C5B1] hover:bg-[#F2E8DC] text-[#63513F] text-xs font-bold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 shrink-0"
+                  title="Reiniciar contador de votos a cero"
+                >
+                  <RotateCcw className={`w-3.5 h-3.5 ${isResettingPoll ? 'animate-spin' : ''}`} />
+                  <span>{isResettingPoll ? 'Reiniciando...' : 'Reiniciar votos a 0'}</span>
+                </button>
               </div>
 
               {/* Filters & Export Bar */}

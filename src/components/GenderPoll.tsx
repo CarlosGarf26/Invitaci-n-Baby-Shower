@@ -1,62 +1,103 @@
 import { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { Sparkles, Heart, CheckCircle2 } from 'lucide-react';
+import { Sparkles, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { subscribeToGenderPoll, voteGenderPoll } from '../firebase';
 import { PollState } from '../types';
 
 export function GenderPoll() {
-  const [poll, setPoll] = useState<PollState>(() => {
-    const saved = localStorage.getItem('baby_shower_poll_v1');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        // fallback
-      }
-    }
-    return {
-      boyVotes: 14,
-      girlVotes: 16,
-      localBoyVotes: 0,
-      localGirlVotes: 0,
-    };
+  const [poll, setPoll] = useState<PollState>({
+    boyVotes: 0,
+    girlVotes: 0,
+    localBoyVotes: 0,
+    localGirlVotes: 0,
   });
 
   const [toastMsg, setToastMsg] = useState('');
 
+  // Read local counts for this device
   useEffect(() => {
-    localStorage.setItem('baby_shower_poll_v1', JSON.stringify(poll));
-  }, [poll]);
+    const savedLocal = localStorage.getItem('baby_shower_poll_device_v2');
+    if (savedLocal) {
+      try {
+        const parsed = JSON.parse(savedLocal);
+        setPoll(prev => ({
+          ...prev,
+          localBoyVotes: parsed.localBoyVotes || 0,
+          localGirlVotes: parsed.localGirlVotes || 0,
+        }));
+      } catch {
+        // ignore
+      }
+    }
+
+    // Subscribe to Firebase real-time votes
+    const unsubscribe = subscribeToGenderPoll(data => {
+      setPoll(prev => ({
+        ...prev,
+        boyVotes: data.boyVotes,
+        girlVotes: data.girlVotes,
+      }));
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const total = poll.boyVotes + poll.girlVotes;
-  const boyPercent = Math.round((poll.boyVotes / total) * 100);
-  const girlPercent = 100 - boyPercent;
+  const boyPercent = total === 0 ? 50 : Math.round((poll.boyVotes / total) * 100);
+  const girlPercent = total === 0 ? 50 : 100 - boyPercent;
 
-  const handleVote = (gender: 'boy' | 'girl') => {
+  const handleVote = async (gender: 'boy' | 'girl') => {
     if (gender === 'boy') {
       confetti({
         particleCount: 60,
         spread: 60,
         colors: ['#A7C7E7', '#C1D3FE', '#E2ECE9', '#F0E6D2'],
       });
+      const updatedLocalBoy = (poll.localBoyVotes || 0) + 1;
       setPoll(prev => ({
         ...prev,
         boyVotes: prev.boyVotes + 1,
-        localBoyVotes: (prev.localBoyVotes || 0) + 1,
+        localBoyVotes: updatedLocalBoy,
       }));
+      localStorage.setItem(
+        'baby_shower_poll_device_v2',
+        JSON.stringify({
+          localBoyVotes: updatedLocalBoy,
+          localGirlVotes: poll.localGirlVotes || 0,
+        })
+      );
       showToast('¡Voto registrado para Team Niño! 💙');
+      try {
+        await voteGenderPoll('boy');
+      } catch (err) {
+        console.warn('Error sending vote to Firebase:', err);
+      }
     } else {
       confetti({
         particleCount: 60,
         spread: 60,
         colors: ['#F8C8DC', '#FDE2E4', '#F5E6CC', '#FFF3B0'],
       });
+      const updatedLocalGirl = (poll.localGirlVotes || 0) + 1;
       setPoll(prev => ({
         ...prev,
         girlVotes: prev.girlVotes + 1,
-        localGirlVotes: (prev.localGirlVotes || 0) + 1,
+        localGirlVotes: updatedLocalGirl,
       }));
+      localStorage.setItem(
+        'baby_shower_poll_device_v2',
+        JSON.stringify({
+          localBoyVotes: poll.localBoyVotes || 0,
+          localGirlVotes: updatedLocalGirl,
+        })
+      );
       showToast('¡Voto registrado para Team Niña! 💖');
+      try {
+        await voteGenderPoll('girl');
+      } catch (err) {
+        console.warn('Error sending vote to Firebase:', err);
+      }
     }
   };
 
@@ -126,8 +167,8 @@ export function GenderPoll() {
         {/* Results Bar */}
         <div className="space-y-1 text-left">
           <div className="flex justify-between text-[11px] font-semibold text-[#736655] px-1">
-            <span>Niño: {boyPercent}%</span>
-            <span>Niña: {girlPercent}%</span>
+            <span>Niño: {poll.boyVotes} ({boyPercent}%)</span>
+            <span>Niña: {poll.girlVotes} ({girlPercent}%)</span>
           </div>
 
           <div className="h-2.5 w-full bg-[#EAE0D1] rounded-full overflow-hidden flex">
@@ -142,9 +183,11 @@ export function GenderPoll() {
           </div>
 
           <p className="text-center text-[10px] text-[#968979] pt-1">
-            {(poll.localBoyVotes || 0) > 0 || (poll.localGirlVotes || 0) > 0
-              ? '¡Sigan votando por cada integrante de la familia! ✨'
-              : 'Toca tu opción favorita para votar'}
+            {total === 0
+              ? 'Sé el primero en votar ✨'
+              : (poll.localBoyVotes || 0) > 0 || (poll.localGirlVotes || 0) > 0
+              ? `Total de votos: ${total} • ¡Sigan votando por la familia! ✨`
+              : `Total de votos: ${total} • Toca tu opción favorita para votar`}
           </p>
         </div>
       </div>

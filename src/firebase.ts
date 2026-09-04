@@ -13,10 +13,12 @@ import {
   addDoc,
   deleteDoc,
   doc,
+  setDoc,
   getDocFromServer,
   onSnapshot,
   query,
   orderBy,
+  increment,
 } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 import { RsvpData, RsvpRecord } from './types';
@@ -170,3 +172,60 @@ export async function logoutAdmin(): Promise<void> {
 }
 
 export { onAuthStateChanged };
+
+/**
+ * Gender Poll Realtime and Persistence
+ */
+export interface FirestorePollData {
+  boyVotes: number;
+  girlVotes: number;
+  updatedAt?: string;
+}
+
+export function subscribeToGenderPoll(
+  onData: (data: FirestorePollData) => void,
+  onError?: (err: Error) => void
+) {
+  const pollDocRef = doc(db, 'polls', 'gender_poll');
+  return onSnapshot(
+    pollDocRef,
+    snapshot => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        onData({
+          boyVotes: Number(data.boyVotes) || 0,
+          girlVotes: Number(data.girlVotes) || 0,
+          updatedAt: data.updatedAt,
+        });
+      } else {
+        // Default initialized at 0 - 0
+        onData({ boyVotes: 0, girlVotes: 0 });
+      }
+    },
+    error => {
+      console.warn('Gender poll listener error:', error);
+      if (onError) onError(error);
+    }
+  );
+}
+
+export async function voteGenderPoll(gender: 'boy' | 'girl'): Promise<void> {
+  const pollDocRef = doc(db, 'polls', 'gender_poll');
+  await setDoc(
+    pollDocRef,
+    {
+      [gender === 'boy' ? 'boyVotes' : 'girlVotes']: increment(1),
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+}
+
+export async function resetGenderPoll(): Promise<void> {
+  const pollDocRef = doc(db, 'polls', 'gender_poll');
+  await setDoc(pollDocRef, {
+    boyVotes: 0,
+    girlVotes: 0,
+    resetAt: new Date().toISOString(),
+  });
+}

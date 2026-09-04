@@ -51,5 +51,11 @@ service cloud.firestore {
       // Hosts with app access can view, list and delete registrations
       allow read, delete: if true;
     }
+
+    // Dynamic Gender Poll collection
+    match /polls/{pollId} {
+      // Any guest can read or cast votes, hosts can reset
+      allow read, write: if true;
+    }
   }
 }
