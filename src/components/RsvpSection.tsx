@@ -17,7 +17,6 @@ export function RsvpSection() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
-  const [showPhoneEdit, setShowPhoneEdit] = useState(false);
 
   const handleAdultsChange = (delta: number) => {
     setData(prev => ({
@@ -247,32 +246,6 @@ ${data.notes.trim() ? `💬 Nota: ${data.notes.trim()}` : ''}
               placeholder="¡Muchas felicidades, qué emoción!"
               className="w-full px-3.5 py-2 rounded-xl bg-[#FDFBF7] border border-[#DDD1BE] text-xs text-[#463C2F] focus:outline-none focus:ring-2 focus:ring-[#B8A389]"
             />
-          </div>
-
-          {/* Settings WhatsApp number */}
-          <div className="pt-1">
-            <button
-              type="button"
-              onClick={() => setShowPhoneEdit(prev => !prev)}
-              className="text-[10px] text-[#91816E] hover:text-[#524434] underline transition-colors"
-            >
-              {showPhoneEdit ? 'Ocultar número de WhatsApp anfitrión' : '⚙️ Configurar número de WhatsApp de los papás'}
-            </button>
-            {showPhoneEdit && (
-              <div className="mt-2 p-2.5 bg-[#F6F0E5] rounded-xl border border-[#E4D9C7] text-xs">
-                <label htmlFor="input-phone-host" className="block text-[11px] font-semibold text-[#665745] mb-1">
-                  WhatsApp del anfitrión (con lada de país, ej. 521234567890):
-                </label>
-                <input
-                  id="input-phone-host"
-                  type="text"
-                  value={data.phoneHost}
-                  onChange={e => setData(prev => ({ ...prev, phoneHost: e.target.value }))}
-                  placeholder="52..."
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-[#D5C7B2] text-xs"
-                />
-              </div>
-            )}
           </div>
 
           {/* Submit Button */}
