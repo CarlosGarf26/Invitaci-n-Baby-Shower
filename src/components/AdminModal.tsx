@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import {
   X,
   Lock,
@@ -13,43 +13,45 @@ import {
   AlertCircle,
   Loader2,
   ShieldCheck,
-  ExternalLink,
+  User as UserIcon,
+  Eye,
+  EyeOff,
+  KeyRound,
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { auth, loginWithGoogle, logoutAdmin, subscribeToRsvps, deleteRsvp } from '../firebase';
+import { subscribeToRsvps, deleteRsvp } from '../firebase';
 import { RsvpRecord } from '../types';
-import type { User } from 'firebase/auth';
 
 interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const AUTHORIZED_EMAIL = 'garfias.jc.260694@gmail.com';
+// Credentials defined by the host
+const TARGET_USER_NORMALIZED = 'bebe';
+const TARGET_PASS_NORMALIZED = 'saiyajin';
 
 export function AdminModal({ isOpen, onClose }: AdminModalProps) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(() => {
+    return (
+      localStorage.getItem('host_auth_session') === 'true' ||
+      sessionStorage.getItem('host_auth_session') === 'true'
+    );
+  });
+  const [userInput, setUserInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const [rsvps, setRsvps] = useState<RsvpRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
+  const [dataError, setDataError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDay, setFilterDay] = useState<'all' | 'viernes' | 'sabado'>('all');
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
-  // Monitor Firebase Auth state
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const isAuthorized = Boolean(
-    currentUser && currentUser.email?.toLowerCase() === AUTHORIZED_EMAIL.toLowerCase()
-  );
-
-  // Subscribe to live RSVPs ONLY when modal is open AND user is authorized
+  // Subscribe to live RSVPs when authorized
   useEffect(() => {
     if (!isOpen || !isAuthorized) {
       if (!isAuthorized) {
@@ -59,7 +61,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
     }
 
     setIsLoading(true);
-    setAuthError(null);
+    setDataError(null);
     const unsubscribe = subscribeToRsvps(
       records => {
         setRsvps(records);
@@ -67,8 +69,8 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
       },
       err => {
         console.error('Error fetching RSVPs:', err);
-        setAuthError(
-          'No se pudieron cargar las confirmaciones en tiempo real. Verifica que tu cuenta tenga permisos de anfitrión.'
+        setDataError(
+          'No se pudieron cargar las confirmaciones en tiempo real. Por favor recarga la página.'
         );
         setIsLoading(false);
       }
@@ -77,39 +79,40 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
     return () => unsubscribe();
   }, [isOpen, isAuthorized]);
 
-  // Handle Google Login
-  const handleGoogleLogin = async () => {
-    if (isLoggingIn) return;
-    setIsLoggingIn(true);
-    setAuthError(null);
-    try {
-      await loginWithGoogle();
-    } catch (err: unknown) {
-      const errorObj = err as { code?: string; message?: string };
-      // Gracefully ignore normal popup cancels or user closing the popup
-      if (
-        errorObj.code === 'auth/cancelled-popup-request' ||
-        errorObj.code === 'auth/popup-closed-by-user'
-      ) {
-        return;
+  // Handle Credentials Submit
+  const handleLoginSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setLoginError(null);
+
+    // Normalize user string (strip accents and lowercase)
+    const normalizedUser = userInput
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    const normalizedPass = passwordInput.trim().toLowerCase();
+
+    if (normalizedUser === TARGET_USER_NORMALIZED && normalizedPass === TARGET_PASS_NORMALIZED) {
+      setIsAuthorized(true);
+      if (rememberMe) {
+        localStorage.setItem('host_auth_session', 'true');
+      } else {
+        sessionStorage.setItem('host_auth_session', 'true');
       }
-      if (errorObj.code === 'auth/popup-blocked') {
-        setAuthError(
-          'La ventana emergente de Google fue bloqueada por el navegador. Prueba abriendo la aplicación en una pestaña nueva.'
-        );
-        return;
-      }
-      console.warn('Google login failed:', err);
-      setAuthError(
-        'No se pudo completar el inicio de sesión con Google. Si estás en la vista previa de la app, intenta abrirla en una pestaña nueva.'
-      );
-    } finally {
-      setIsLoggingIn(false);
+      setUserInput('');
+      setPasswordInput('');
+      setLoginError(null);
+    } else {
+      setLoginError('Usuario o contraseña incorrectos. Por favor verifica tus credenciales.');
     }
   };
 
-  const handleLogout = async () => {
-    await logoutAdmin();
+  const handleLogout = () => {
+    setIsAuthorized(false);
+    localStorage.removeItem('host_auth_session');
+    sessionStorage.removeItem('host_auth_session');
+    setRsvps([]);
   };
 
   // Confirm and delete an RSVP record
@@ -257,107 +260,107 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
         <div className="p-4 sm:p-6 overflow-y-auto flex-1">
           {!isAuthorized ? (
             /* Login Form */
-            <div className="max-w-md mx-auto py-6 text-center space-y-5">
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-[#EFE5D5] flex items-center justify-center text-[#775F44] shadow-xs">
-                <Lock className="w-7 h-7" />
-              </div>
-
-              <div>
+            <div className="max-w-md mx-auto py-6 space-y-5">
+              <div className="text-center space-y-2">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-[#EFE5D5] flex items-center justify-center text-[#775F44] shadow-xs">
+                  <Lock className="w-7 h-7" />
+                </div>
                 <h3 className="text-xl font-bold font-comfortaa text-[#4A3E30]">
                   Acceso de Anfitriones
                 </h3>
-                <p className="text-xs text-[#82715F] mt-1.5 leading-relaxed">
-                  Para proteger la privacidad de los invitados, el acceso a la base de datos oficial está reservado a la cuenta anfitriona autorizada.
+                <p className="text-xs text-[#82715F] leading-relaxed">
+                  Ingresa con tu usuario y contraseña de anfitrión para ver la lista de invitados y descargar el reporte.
                 </p>
               </div>
 
-              {/* Unauthorized user banner if logged in with wrong email */}
-              {currentUser && currentUser.email?.toLowerCase() !== AUTHORIZED_EMAIL.toLowerCase() && (
-                <div className="p-3.5 bg-[#FFF3E0] border border-[#FFE082] rounded-2xl text-xs text-[#E65100] text-left space-y-2">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold">Cuenta no autorizada: {currentUser.email}</p>
-                      <p className="mt-0.5 text-[11px] text-[#BF360C]">
-                        Solo la cuenta organizadora <strong>{AUTHORIZED_EMAIL}</strong> tiene permisos en Firebase Firestore.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="w-full py-2 px-3 bg-white border border-[#FFD54F] rounded-xl font-bold text-xs text-[#E65100] hover:bg-[#FFF8E1] transition-colors"
-                  >
-                    Cerrar sesión e ingresar con {AUTHORIZED_EMAIL}
-                  </button>
-                </div>
-              )}
-
-              {authError && (
-                <div className="p-3.5 bg-[#FBE9E7] border border-[#FFCCBC] rounded-2xl text-xs text-[#C62828] flex items-start gap-2 text-left">
+              {loginError && (
+                <div className="p-3.5 bg-[#FBE9E7] border border-[#FFCCBC] rounded-2xl text-xs text-[#C62828] flex items-start gap-2.5 text-left animate-shake">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{authError}</span>
+                  <span className="leading-snug">{loginError}</span>
                 </div>
               )}
 
-              {/* Google Sign In Button */}
-              <div className="space-y-2.5 pt-2">
-                <button
-                  type="button"
-                  disabled={isLoggingIn}
-                  onClick={handleGoogleLogin}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-white border-2 border-[#DCD0BE] hover:border-[#BAA58A] hover:bg-[#FDFBF7] disabled:opacity-70 text-xs sm:text-sm font-bold text-[#4E4133] shadow-xs flex items-center justify-center gap-3 transition-all"
-                >
-                  {isLoggingIn ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin text-[#7D6B58]" />
-                      <span>Conectando con Google...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-                        <path
-                          fill="#4285F4"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="#34A853"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="#FBBC05"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                        />
-                        <path
-                          fill="#EA4335"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                        />
-                      </svg>
-                      <span>Iniciar sesión con Google</span>
-                    </>
-                  )}
-                </button>
+              {/* User & Password form */}
+              <form onSubmit={handleLoginSubmit} className="space-y-4 pt-1">
+                {/* Username Input */}
+                <div className="space-y-1.5 text-left">
+                  <label className="block text-xs font-semibold text-[#665440]">
+                    Usuario
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#988775]" />
+                    <input
+                      type="text"
+                      value={userInput}
+                      onChange={e => setUserInput(e.target.value)}
+                      placeholder="Ej. Bebé"
+                      autoFocus
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-white rounded-2xl border border-[#D9CDBC] text-xs sm:text-sm text-[#4E4133] placeholder:text-[#A89885] focus:outline-none focus:ring-2 focus:ring-[#BAA58A] shadow-xs"
+                    />
+                  </div>
+                </div>
 
-                <p className="text-[11px] text-[#8C7B68]">
-                  Cuenta autorizada: <span className="font-semibold text-[#5A4B3A]">{AUTHORIZED_EMAIL}</span>
-                </p>
-              </div>
+                {/* Password Input */}
+                <div className="space-y-1.5 text-left">
+                  <label className="block text-xs font-semibold text-[#665440]">
+                    Contraseña
+                  </label>
+                  <div className="relative">
+                    <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#988775]" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={passwordInput}
+                      onChange={e => setPasswordInput(e.target.value)}
+                      placeholder="Ingresa tu contraseña"
+                      required
+                      className="w-full pl-10 pr-11 py-3 bg-white rounded-2xl border border-[#D9CDBC] text-xs sm:text-sm text-[#4E4133] placeholder:text-[#A89885] focus:outline-none focus:ring-2 focus:ring-[#BAA58A] shadow-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(prev => !prev)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#988775] hover:text-[#5E4C38] transition-colors p-1"
+                      title={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
 
-              {/* Fallback to open in standalone tab in case preview iframe blocks popups */}
-              <div className="pt-3 border-t border-[#EAE0D0]">
+                {/* Remember Me checkbox */}
+                <div className="flex items-center gap-2 pt-0.5">
+                  <input
+                    id="rememberMe"
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={e => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-[#D9CDBC] text-[#6B553D] focus:ring-[#BAA58A] cursor-pointer"
+                  />
+                  <label htmlFor="rememberMe" className="text-xs text-[#7A6956] cursor-pointer select-none">
+                    Recordar acceso en este dispositivo
+                  </label>
+                </div>
+
+                {/* Submit button */}
                 <button
-                  type="button"
-                  onClick={() => window.open(window.location.href, '_blank', 'noopener,noreferrer')}
-                  className="inline-flex items-center gap-1.5 text-xs text-[#7B6955] hover:text-[#4A3D2E] hover:underline"
+                  type="submit"
+                  className="w-full py-3.5 px-4 rounded-2xl bg-[#6B553D] hover:bg-[#58442F] active:scale-[0.99] text-white font-bold text-xs sm:text-sm transition-all shadow-md mt-2 flex items-center justify-center gap-2"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>¿Tienes problemas con la ventana emergente? Abrir en pestaña nueva</span>
+                  <Lock className="w-4 h-4" />
+                  <span>Entrar al Panel de Anfitriones</span>
                 </button>
-              </div>
+              </form>
             </div>
           ) : (
             /* Dashboard View */
             <div className="space-y-5">
+              {dataError && (
+                <div className="p-3.5 bg-[#FBE9E7] border border-[#FFCCBC] rounded-2xl text-xs text-[#C62828] flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{dataError}</span>
+                </div>
+              )}
+
               {/* Summary Metrics Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div className="p-3 bg-white rounded-2xl border border-[#E6DBCA] shadow-xs">
@@ -571,10 +574,10 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
         {/* Footer info */}
         <div className="p-3 sm:p-4 border-t border-[#E8DEC9] bg-[#F7EFE4] text-center text-[11px] text-[#8C7B67] flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>🔒 Panel seguro con sincronización en tiempo real de Firebase Firestore</span>
-          {currentUser?.email ? (
-            <span className="font-medium text-[#66543F]">Sesión: {currentUser.email}</span>
+          {isAuthorized ? (
+            <span className="font-semibold text-[#66543F]">Anfitrión: Bebé (Sesión activa)</span>
           ) : (
-            <span className="font-medium text-[#66543F]">Anfitrión: {AUTHORIZED_EMAIL}</span>
+            <span className="font-medium text-[#66543F]">Acceso reservado a los anfitriones</span>
           )}
         </div>
       </motion.div>

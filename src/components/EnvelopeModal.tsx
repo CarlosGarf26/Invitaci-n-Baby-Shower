@@ -66,7 +66,7 @@ export function EnvelopeModal({ isOpen, onOpenInvitation }: EnvelopeModalProps) 
           >
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#EAE2D7] text-[#6D6356] text-sm tracking-wider uppercase font-semibold mb-2">
               <Sparkles className="w-4 h-4 text-[#B89B72]" />
-              Baby Shower Sajayin
+              Baby Shower Saiyajin
             </div>
             <h1 className="text-2xl sm:text-3xl font-script text-[#5C5346]">
               ¡Tenemos algo lindo que contarte!
@@ -110,7 +110,7 @@ export function EnvelopeModal({ isOpen, onOpenInvitation }: EnvelopeModalProps) 
               
               <div className="w-10 h-0.5 bg-[#D7C9B6] mx-auto mb-2.5" />
               <p className="text-[14px] sm:text-base font-semibold text-[#6E6354] italic">
-                La llegada de nuestro Bebé Sajayin
+                La llegada de nuestro Bebé Saiyajin
               </p>
             </motion.div>
 

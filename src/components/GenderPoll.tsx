@@ -79,7 +79,7 @@ export function GenderPoll() {
           ¿Qué crees que será?
         </h3>
         <p className="text-xs text-[#7A6D5D] mt-0.5 mb-4 max-w-xs mx-auto">
-          ¡El sexo de nuestro Bebé Sajayin se sabrá hasta el nacimiento! Vota por tu corazonada:
+          ¡El sexo de nuestro Bebé Saiyajin se sabrá hasta el nacimiento! Vota por tu corazonada:
         </p>
 
         {/* Voting Buttons */}

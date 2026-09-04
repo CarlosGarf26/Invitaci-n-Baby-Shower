@@ -119,7 +119,7 @@ export default function App() {
             <div className="w-16 h-0.5 bg-[#D5C4AC] mx-auto my-3" />
 
             <p className="text-xs sm:text-sm text-[#6C5E4C] leading-relaxed max-w-sm mx-auto font-medium">
-              Como Bulma y Vegeta, estamos listos para recibir a nuestro Bebé Sajayin. ¡Acompáñanos a celebrar en esta escapada tan especial!
+              Como Bulma y Vegeta, estamos listos para recibir a nuestro Bebé Saiyajin. ¡Acompáñanos a celebrar en esta escapada tan especial!
             </p>
 
             {/* Event highlights pill */}

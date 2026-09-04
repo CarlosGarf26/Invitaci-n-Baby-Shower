@@ -196,7 +196,7 @@ export function InfoCards() {
                   Detalle Especial
                 </span>
                 <h3 className="text-sm font-bold font-comfortaa text-[#4A3F31]">
-                  Regalos: Nuestro Bebé Sajayin
+                  Regalos: Nuestro Bebé Saiyajin
                 </h3>
               </div>
             </div>
@@ -210,7 +210,7 @@ export function InfoCards() {
           {expandedId === 'regalos' && (
             <div className="px-4 pb-4 pt-1 text-xs text-[#6B5E4D] space-y-1.5 border-t border-[#EFE5D4]">
               <p>
-                El sexo y el nombre de nuestro Bebé Sajayin serán una sorpresa total hasta el día de su nacimiento.
+                El sexo y el nombre de nuestro Bebé Saiyajin serán una sorpresa total hasta el día de su nacimiento.
               </p>
               <p className="text-[11px] text-[#7C6F5E] italic">
                 Te pedimos considerarlo para cualquier detalle o regalito (se sugieren colores neutros

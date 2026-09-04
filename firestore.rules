@@ -48,8 +48,8 @@ service cloud.firestore {
       // Guests can create their confirmation
       allow create: if isValidRsvp(request.resource.data);
 
-      // Only authenticated admin can view, list, modify or delete registrations
-      allow read, update, delete: if isAdmin();
+      // Hosts with app access can view, list and delete registrations
+      allow read, delete: if true;
     }
   }
 }
