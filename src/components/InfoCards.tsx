@@ -50,7 +50,7 @@ export function InfoCards() {
                   ¡Muy Importante!
                 </span>
                 <h3 className="text-sm font-bold font-comfortaa text-[#573919]">
-                  Confirmar antes del 16 de Octubre
+                  Confirmar antes del 10 de Octubre
                 </h3>
               </div>
             </div>
@@ -65,7 +65,7 @@ export function InfoCards() {
             <div className="px-4 pb-4 pt-1 text-xs text-[#6C5338] space-y-2 border-t border-[#F1E0CA]">
               <p>
                 Por favor, confírmanos tu asistencia a más tardar el{' '}
-                <strong className="text-[#884D19]">16 de octubre</strong>, indicando el número total
+                <strong className="text-[#884D19]">10 de octubre</strong>, indicando el número total
                 de personas que te acompañarán (adultos y niños).
               </p>
               <div className="p-2.5 rounded-xl bg-[#FCEFDC] border border-[#F3DFC1] text-[11px] leading-relaxed">
@@ -165,11 +165,11 @@ export function InfoCards() {
           {expandedId === 'comidas' && (
             <div className="px-4 pb-4 pt-1 text-xs text-[#6B5E4D] space-y-2 border-t border-[#EFE5D4]">
               <p>
-                🍲 <strong>Sábado:</strong> Consentiremos a todos los invitados con la deliciosa comida del
+                🍲 <strong>Domingo 15:</strong> Consentiremos a todos los invitados con la deliciosa comida del
                 evento para festejar juntos.
               </p>
               <p>
-                🧺 <strong>Resto de los días:</strong> Cada quien podrá organizar sus alimentos a su gusto.
+                🧺 <strong>Resto de los días (13, 14 y 16):</strong> Cada quien podrá organizar sus alimentos a su gusto.
                 Las cabañas cuentan con <strong>su propia cocina y refrigerador independiente</strong>, así
                 que pueden llevar todo lo necesario para sentirse como en casa.
               </p>

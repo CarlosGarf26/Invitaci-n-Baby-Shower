@@ -2,7 +2,7 @@ export interface RsvpData {
   name: string;
   adults: number;
   children: number;
-  arrivalDay: 'viernes' | 'sabado';
+  arrivalDay: 'viernes' | 'sabado' | 'domingo';
   phoneHost: string;
   notes: string;
   status?: 'confirmed' | 'declined';

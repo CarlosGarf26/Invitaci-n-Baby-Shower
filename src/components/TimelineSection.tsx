@@ -2,45 +2,53 @@ import { useState } from 'react';
 import { Calendar, CheckCircle2, ChevronRight, Download } from 'lucide-react';
 
 export function TimelineSection() {
-  const [activeDay, setActiveDay] = useState<number>(1); // default to Saturday (Day 1)
+  const [activeDay, setActiveDay] = useState<number>(2); // default to Sunday (Day 2, main event)
 
   const days = [
     {
-      day: 'Viernes 20 Nov',
+      day: 'Viernes 13 Nov',
       title: 'Hospedaje libre & Llegada',
       subtitle: 'Inicio de la escapada',
       badge: 'Cabañas Abiertas',
       desc: 'Las cabañas estarán disponibles desde este día. Puedes llegar con calma desde el viernes para instalarte, desconectarte y disfrutar de las instalaciones.',
-      iconText: '20',
+      iconText: '13',
     },
     {
-      day: 'Sábado 21 Nov',
+      day: 'Sábado 14 Nov',
+      title: 'Convivencia & Relajación',
+      subtitle: 'Alberca y descanso previo',
+      badge: 'Día Libre',
+      desc: 'Día para disfrutar del sol, la alberca y compartir en familia preparándonos para la gran fiesta del domingo.',
+      iconText: '14',
+    },
+    {
+      day: 'Domingo 15 Nov',
       title: '¡Gran Baby Shower!',
       subtitle: 'Evento Principal & Festejo',
       badge: 'Comida Incluida',
-      desc: '¡El momento cumbre! Consentiremos a todos los invitados con la comida especial del evento para celebrar y brindar juntos por el bebé.',
-      iconText: '21',
+      desc: '¡El momento cumbre! Consentiremos a todos los invitados con la comida especial del evento para celebrar y brindar juntos por la llegada del bebé.',
+      iconText: '15',
       isPrimary: true,
     },
     {
-      day: 'Dom 22 - Lun 23 Nov',
-      title: 'Descanso & Despedida',
-      subtitle: 'Alberca y convivencia',
-      badge: 'Hasta el Lunes',
-      desc: 'Días libres para relajarse en la alberca, convivir en familia y disfrutar. La salida de las cabañas es el lunes.',
-      iconText: '22-23',
+      day: 'Lunes 16 Nov',
+      title: 'Despedida & Salida',
+      subtitle: 'Fin de la estancia',
+      badge: 'Check-out',
+      desc: 'Desayuno ligero, últimos momentos de alberca y despedida de las cabañas.',
+      iconText: '16',
     },
   ];
 
   const handleAddToCalendar = () => {
-    // Google Calendar URL for Saturday Nov 21
+    // Google Calendar URL for Sunday Nov 15
     const title = encodeURIComponent('Baby Shower en Villas Florines Tequesquitengo 👶');
     const details = encodeURIComponent(
-      'Celebración del Baby Shower de nuestro bebé. Fin de semana de cabañas del 20 al 23 de Noviembre. Evento principal: Sábado 21.'
+      'Celebración del Baby Shower de nuestro bebé. Fin de semana de cabañas del 13 al 16 de Noviembre. Evento principal: Domingo 15.'
     );
     const location = encodeURIComponent('Villas Florines 33 IMSS Tequesquitengo, Morelos');
-    // November 21st 13:00 to 20:00 UTC-6 (19:00 to 02:00Z)
-    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=20261121T130000/20261121T210000&details=${details}&location=${location}`;
+    // November 15th 13:00 to 20:00 UTC-6 (19:00 to 02:00Z)
+    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=20261115T130000/20261115T210000&details=${details}&location=${location}`;
     window.open(googleCalendarUrl, '_blank', 'noopener,noreferrer');
   };
 
@@ -54,7 +62,7 @@ export function TimelineSection() {
           ¿Cuándo y cómo será?
         </h2>
         <p className="text-xs text-[#7A6E5E] max-w-xs mx-auto mt-1">
-          Organizamos una escapada para disfrutar juntos del viernes 20 al lunes 23 de noviembre.
+          Organizamos una escapada para disfrutar juntos del viernes 13 al lunes 16 de noviembre. Evento principal: Domingo 15.
         </p>
       </div>
 

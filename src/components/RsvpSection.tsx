@@ -32,6 +32,19 @@ export function RsvpSection() {
     }));
   };
 
+  const getArrivalDayLabel = (day: string) => {
+    switch (day) {
+      case 'viernes':
+        return 'Viernes 13 (todo el fin de semana)';
+      case 'sabado':
+        return 'Sábado 14 (convivencia y alberca)';
+      case 'domingo':
+        return 'Domingo 15 (día del Baby Shower)';
+      default:
+        return 'Viernes 13';
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -63,10 +76,7 @@ export function RsvpSection() {
       setIsSent(true);
 
       // 3. Build friendly WhatsApp message & open
-      const arrivalText =
-        data.arrivalDay === 'viernes'
-          ? 'Desde el Viernes 20'
-          : 'Sábado 21 (evento principal)';
+      const arrivalText = getArrivalDayLabel(data.arrivalDay);
       const totalPeople = data.adults + data.children;
       const msg = `¡Hola! Queremos confirmar nuestra asistencia al Baby Shower en Tequesquitengo 👶🍼✨
 
@@ -87,10 +97,7 @@ ${data.notes.trim() ? `💬 Nota: ${data.notes.trim()}` : ''}
     } catch (err) {
       console.error('Error al registrar confirmación:', err);
       // Even if Firestore has transient error, let user send via WhatsApp
-      const arrivalText =
-        data.arrivalDay === 'viernes'
-          ? 'Desde el Viernes 20'
-          : 'Sábado 21 (evento principal)';
+      const arrivalText = getArrivalDayLabel(data.arrivalDay);
       const totalPeople = data.adults + data.children;
       const msg = `¡Hola! Queremos confirmar nuestra asistencia al Baby Shower en Tequesquitengo 👶🍼✨\n\n👤 Familia / Invitado: ${data.name.trim()}\n👥 Total personas: ${totalPeople} (${data.adults} adultos, ${data.children} niños)\n📅 Llegada: ${arrivalText}\n${data.notes.trim() ? `💬 Nota: ${data.notes.trim()}` : ''}`;
       const encodedMsg = encodeURIComponent(msg);
@@ -117,7 +124,7 @@ ${data.notes.trim() ? `💬 Nota: ${data.notes.trim()}` : ''}
             ¿Nos acompañas?
           </h2>
           <div className="inline-block px-3 py-1 bg-[#F5EAD9] rounded-full text-xs text-[#825A2A] font-semibold mt-2 border border-[#E8D6BD]">
-            ⏰ Fecha límite: 16 de Octubre
+            ⏰ Fecha límite: 10 de Octubre
           </div>
         </div>
 
@@ -202,33 +209,47 @@ ${data.notes.trim() ? `💬 Nota: ${data.notes.trim()}` : ''}
             <label className="block text-xs font-bold text-[#564939] mb-1.5">
               ¿Cuándo planean llegar a las cabañas?
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 id="btn-arrival-friday"
                 type="button"
                 onClick={() => setData(prev => ({ ...prev, arrivalDay: 'viernes' }))}
-                className={`p-2.5 rounded-xl border text-left transition-all ${
+                className={`p-2 rounded-xl border text-center transition-all ${
                   data.arrivalDay === 'viernes'
-                    ? 'bg-[#EFE8DC] border-[#BFA789] text-[#4A3E30]'
+                    ? 'bg-[#EFE8DC] border-[#BFA789] text-[#4A3E30] shadow-2xs font-bold'
                     : 'bg-[#FDFBF7] border-[#E2D7C5] text-[#7A6D5E] hover:bg-[#F6F0E6]'
                 }`}
               >
-                <span className="block text-xs font-bold font-comfortaa">Desde el Viernes 20</span>
-                <span className="text-[10px] text-[#867868]">Para disfrutar todo el fin de semana</span>
+                <span className="block text-xs font-bold font-comfortaa">Viernes 13</span>
+                <span className="text-[10px] text-[#867868] block leading-tight mt-0.5">Todo el finde</span>
               </button>
 
               <button
                 id="btn-arrival-saturday"
                 type="button"
                 onClick={() => setData(prev => ({ ...prev, arrivalDay: 'sabado' }))}
-                className={`p-2.5 rounded-xl border text-left transition-all ${
+                className={`p-2 rounded-xl border text-center transition-all ${
                   data.arrivalDay === 'sabado'
-                    ? 'bg-[#EFE8DC] border-[#BFA789] text-[#4A3E30]'
+                    ? 'bg-[#EFE8DC] border-[#BFA789] text-[#4A3E30] shadow-2xs font-bold'
                     : 'bg-[#FDFBF7] border-[#E2D7C5] text-[#7A6D5E] hover:bg-[#F6F0E6]'
                 }`}
               >
-                <span className="block text-xs font-bold font-comfortaa">El Sábado 21</span>
-                <span className="text-[10px] text-[#867868]">Directo al evento principal</span>
+                <span className="block text-xs font-bold font-comfortaa">Sábado 14</span>
+                <span className="text-[10px] text-[#867868] block leading-tight mt-0.5">Alberca / relax</span>
+              </button>
+
+              <button
+                id="btn-arrival-sunday"
+                type="button"
+                onClick={() => setData(prev => ({ ...prev, arrivalDay: 'domingo' }))}
+                className={`p-2 rounded-xl border text-center transition-all ${
+                  data.arrivalDay === 'domingo'
+                    ? 'bg-[#EFE8DC] border-[#BFA789] text-[#4A3E30] shadow-2xs font-bold'
+                    : 'bg-[#FDFBF7] border-[#E2D7C5] text-[#7A6D5E] hover:bg-[#F6F0E6]'
+                }`}
+              >
+                <span className="block text-xs font-bold font-comfortaa">Domingo 15</span>
+                <span className="text-[10px] text-[#867868] block leading-tight mt-0.5">Baby Shower</span>
               </button>
             </div>
           </div>

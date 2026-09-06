@@ -49,7 +49,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterDay, setFilterDay] = useState<'all' | 'viernes' | 'sabado'>('all');
+  const [filterDay, setFilterDay] = useState<'all' | 'viernes' | 'sabado' | 'domingo'>('all');
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [pollStats, setPollStats] = useState<{ boyVotes: number; girlVotes: number }>({ boyVotes: 0, girlVotes: 0 });
   const [isResettingPoll, setIsResettingPoll] = useState(false);
@@ -164,13 +164,16 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
     let totalChildren = 0;
     let fridayCount = 0;
     let saturdayCount = 0;
+    let sundayCount = 0;
 
     rsvps.forEach(r => {
       if (r.status !== 'declined') {
         totalAdults += Number(r.adults) || 0;
         totalChildren += Number(r.children) || 0;
         if (r.arrivalDay === 'viernes') fridayCount++;
-        else saturdayCount++;
+        else if (r.arrivalDay === 'sabado') saturdayCount++;
+        else if (r.arrivalDay === 'domingo') sundayCount++;
+        else fridayCount++;
       }
     });
 
@@ -181,6 +184,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
       totalFamilies: rsvps.length,
       fridayCount,
       saturdayCount,
+      sundayCount,
     };
   }, [rsvps]);
 
@@ -213,12 +217,19 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
       'Fecha Registro',
     ];
 
+    const getDayLabel = (day: string) => {
+      if (day === 'viernes') return 'Viernes 13';
+      if (day === 'sabado') return 'Sábado 14';
+      if (day === 'domingo') return 'Domingo 15';
+      return day;
+    };
+
     const rows = rsvps.map(r => [
       `"${(r.name || '').replace(/"/g, '""')}"`,
       r.adults,
       r.children,
       Number(r.adults) + Number(r.children),
-      r.arrivalDay === 'viernes' ? 'Viernes 20' : 'Sábado 21',
+      getDayLabel(r.arrivalDay),
       r.status === 'declined' ? 'Declinó' : 'Confirmado',
       `"${(r.notes || '').replace(/"/g, '""')}"`,
       r.createdAt ? new Date(r.createdAt).toLocaleString('es-MX') : '',
@@ -432,8 +443,9 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                     <span>Llegada</span>
                   </div>
                   <div className="text-xs font-bold text-[#4A3E30] space-y-0.5 mt-1">
-                    <div>🌄 Viernes 20: <span className="text-[#70845B]">{stats.fridayCount}</span></div>
-                    <div>☀️ Sábado 21: <span className="text-[#967C56]">{stats.saturdayCount}</span></div>
+                    <div>🌄 Vie 13: <span className="text-[#70845B]">{stats.fridayCount}</span></div>
+                    <div>☀️ Sáb 14: <span className="text-[#967C56]">{stats.saturdayCount}</span></div>
+                    <div>🎉 Dom 15: <span className="text-[#A26D35]">{stats.sundayCount}</span></div>
                   </div>
                 </div>
               </div>
@@ -502,7 +514,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                           : 'text-[#817260] hover:text-[#4A3E30]'
                       }`}
                     >
-                      Viernes
+                      Vie 13
                     </button>
                     <button
                       type="button"
@@ -513,7 +525,18 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                           : 'text-[#817260] hover:text-[#4A3E30]'
                       }`}
                     >
-                      Sábado
+                      Sáb 14
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFilterDay('domingo')}
+                      className={`px-2.5 py-1 rounded-lg transition-colors ${
+                        filterDay === 'domingo'
+                          ? 'bg-white text-[#4A3E30] shadow-xs font-bold'
+                          : 'text-[#817260] hover:text-[#4A3E30]'
+                      }`}
+                    >
+                      Dom 15
                     </button>
                   </div>
 
@@ -555,7 +578,25 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                   <div className="space-y-2">
                     {filteredRsvps.map(rsvp => {
                       const totalPersons = Number(rsvp.adults) + Number(rsvp.children);
-                      const isViernes = rsvp.arrivalDay === 'viernes';
+                      const getDayBadge = () => {
+                        if (rsvp.arrivalDay === 'viernes') {
+                          return {
+                            label: '🌄 Llegada Vie 13',
+                            classes: 'bg-[#EBF3E8] text-[#3E6B34] border-[#CCE0C7]',
+                          };
+                        }
+                        if (rsvp.arrivalDay === 'sabado') {
+                          return {
+                            label: '☀️ Llegada Sáb 14',
+                            classes: 'bg-[#FFF8E7] text-[#8C6D23] border-[#F4E3B2]',
+                          };
+                        }
+                        return {
+                          label: '🎉 Llegada Dom 15',
+                          classes: 'bg-[#F4EAF7] text-[#7A3E8A] border-[#E5CEEC]',
+                        };
+                      };
+                      const dayBadge = getDayBadge();
 
                       return (
                         <div
@@ -571,13 +612,9 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                                 👥 {totalPersons} persona{totalPersons !== 1 ? 's' : ''} ({rsvp.adults} adultos, {rsvp.children} niños)
                               </span>
                               <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                  isViernes
-                                    ? 'bg-[#EBF3E8] text-[#3E6B34] border-[#CCE0C7]'
-                                    : 'bg-[#FFF8E7] text-[#8C6D23] border-[#F4E3B2]'
-                                }`}
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${dayBadge.classes}`}
                               >
-                                {isViernes ? '🌄 Llegada Viernes 20' : '☀️ Llegada Sábado 21'}
+                                {dayBadge.label}
                               </span>
                             </div>
 

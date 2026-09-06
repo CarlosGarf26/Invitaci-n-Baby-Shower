@@ -125,10 +125,10 @@ export default function App() {
             {/* Event highlights pill */}
             <div className="mt-5 inline-flex flex-wrap items-center justify-center gap-2 text-xs">
               <span className="px-3 py-1 bg-[#EBE0CF] rounded-full text-[#5B4C38] font-bold">
-                📅 Sábado 21 de Noviembre
+                📅 Domingo 15 de Noviembre
               </span>
               <span className="px-3 py-1 bg-[#E6EADB] rounded-full text-[#4E5C46] font-semibold">
-                🏡 Cabañas Tequesquitengo
+                🏡 Cabañas del 13 al 16 Nov
               </span>
             </div>
 

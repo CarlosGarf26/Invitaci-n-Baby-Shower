@@ -11,17 +11,17 @@ export function Countdown() {
   });
 
   useEffect(() => {
-    // Target: November 21, 13:00 (1:00 PM)
+    // Target: November 15, 13:00 (1:00 PM)
     const now = new Date();
     let targetYear = now.getFullYear();
     const currentMonth = now.getMonth(); // 0-indexed, 10 is Nov
     const currentDay = now.getDate();
 
-    if (currentMonth > 10 || (currentMonth === 10 && currentDay > 21)) {
+    if (currentMonth > 10 || (currentMonth === 10 && currentDay > 15)) {
       targetYear += 1;
     }
 
-    const eventDate = new Date(targetYear, 10, 21, 13, 0, 0).getTime();
+    const eventDate = new Date(targetYear, 10, 15, 13, 0, 0).getTime();
 
     const updateCountdown = () => {
       const currentTime = new Date().getTime();
