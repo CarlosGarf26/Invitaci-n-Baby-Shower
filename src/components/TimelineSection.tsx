@@ -35,7 +35,7 @@ export function TimelineSection() {
       title: 'Despedida & Salida',
       subtitle: 'Fin de la estancia',
       badge: 'Check-out',
-      desc: 'Desayuno ligero, últimos momentos de alberca y despedida de las cabañas.',
+      desc: 'Últimos momentos de alberca y despedida de las cabañas.',
       iconText: '16',
     },
   ];
